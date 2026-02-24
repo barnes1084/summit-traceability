@@ -334,3 +334,217 @@ The initial schema in this order:
 * scan_events
 
 ---
+
+
+### ✅ Use **ASP.NET Core 8 (LTS)** for the API
+
+* LTS support window (stability for installs)
+* Great Docker images
+* Widest compatibility for “existing PCs”
+* Works perfectly for your edge server pattern
+
+If later you want to move up, you can. But **Core 8 is the safe product baseline**.
+
+---
+
+# Minimal API project: what you should build (MVP)
+
+Your API should do 4 things first:
+
+1. **Health + version** (so you can debug installs fast)
+2. **Master-data reads** (sites, locations, items, work orders, lots)
+3. **Transaction writes** (receive/move/consume)
+4. **Scan event ingest** (optional but recommended for troubleshooting)
+
+Auth can be minimal at first (single admin token / station token), then add proper auth later.
+
+---
+
+# Project structure (backend/)
+
+Recommended:
+
+```text
+backend/
+  Summit.Trace.Api/
+    Controllers/
+      HealthController.cs
+      MasterDataController.cs
+      TransactionsController.cs
+      ScanEventsController.cs
+    Data/
+      AppDbContext.cs
+      Entities/ (optional if you prefer organized)
+    Models/
+      Requests/
+      Responses/
+    Program.cs
+    appsettings.json
+    appsettings.Development.json
+```
+
+---
+
+# Step-by-step in Visual Studio (fast path)
+
+## 1) Create the project
+
+In Visual Studio:
+
+**New Project →** “ASP.NET Core Web API”
+
+* Framework: **.NET 8**
+* Authentication: **None** (for now)
+* Configure for HTTPS: Yes
+* Enable OpenAPI: Yes
+
+Name:
+
+* Solution: `Summit.Traceability`
+* Project: `Summit.Trace.Api`
+
+---
+
+# Step 2: Add packages
+
+Use NuGet:
+
+* `Npgsql.EntityFrameworkCore.PostgreSQL`
+* `Microsoft.EntityFrameworkCore.Design`
+* `Swashbuckle.AspNetCore`
+
+(If you like raw SQL + Dapper instead of EF Core, that’s also fine, but EF Core is fast for MVP CRUD + migrations are already Flyway-driven.)
+
+---
+
+# Step 3: Connection string + config
+
+### `backend/Summit.Trace.Api/appsettings.Development.json`
+
+```json
+{
+  "ConnectionStrings": {
+    "Db": "Host=localhost;Port=5432;Database=summit_trace;Username=summit;Password=change_me_now"
+  }
+}
+```
+
+When you run inside Docker later, you’ll use `Host=db` instead of `localhost`.
+
+---
+
+# Step 4: EF Core DbContext (minimal, aligned to your tables)
+
+### `Data/AppDbContext.cs`
+
+Create DbSets only for what you need right now.
+
+Tables we created:
+
+* site, location, item, work_order, lot
+* txn_receive, txn_move, txn_consume
+* scan_event
+
+You can map them with EF Core entities, or you can use **Npgsql + SQL**. For MVP speed, I’d do EF Core entities and keep them simple.
+
+---
+
+# Step 5: Minimal endpoints (controllers) to match build order
+
+### A) Health
+
+* `GET /api/health`
+* `GET /api/version`
+
+### B) Master data read
+
+* `GET /api/sites`
+* `GET /api/locations?siteCode=plant-1`
+* `GET /api/items?siteCode=plant-1`
+* `GET /api/workorders?siteCode=plant-1`
+* `GET /api/lots?siteCode=plant-1`
+* `GET /api/inventory/on-hand?siteCode=plant-1` (backed by `v_inventory_on_hand`)
+
+### C) Transaction write (but keep it “stubbed” until step 6)
+
+Create endpoints but they can return “not implemented” until scan ingestion UI exists — or implement now, but we’ll keep logic small.
+
+* `POST /api/tx/receive`
+* `POST /api/tx/move`
+* `POST /api/tx/consume`
+
+### D) Scan telemetry (optional but useful)
+
+* `POST /api/scan-events`
+
+---
+
+# Step 6: Deployment considerations (existing PC installs)
+
+You brought up a really important point: **do you need to install on an existing PC?**
+
+Yes — but you can do it cleanly.
+
+You have 3 deployment models:
+
+## ✅ Model 1 (Recommended): Docker install (Edge stack)
+
+Customer PC runs Docker Desktop (Windows) or Docker Engine (Linux).
+You ship:
+
+* docker compose
+* env file
+* backup scripts
+
+**Pros**
+
+* Most reliable install
+* Same everywhere
+* Easiest updates
+* DB + API + UI all together
+
+**Cons**
+
+* Some plants hate Docker / IT may resist
+
+## Model 2: “Self-contained” .NET publish (no Docker)
+
+You publish the API as a self-contained exe and run Postgres separately (installed service).
+
+**Pros**
+
+* No Docker needed
+* Familiar to IT
+
+**Cons**
+
+* Harder to keep consistent
+* More install variance
+* Update story is harder
+
+## Model 3: Hybrid
+
+* API self-contained
+* Postgres in Docker or installed
+
+Not my favorite.
+
+### For your moonlighting product:
+
+Start with **Docker-first**, but keep the API capable of running outside Docker (connection string via config).
+
+---
+
+# My recommendation on controllers vs minimal APIs
+
+Controllers are fine (you said you want controller webcalls).
+They also give you:
+
+* structured versioning later
+* easy Swagger grouping
+* clean DTO separation
+
+So: **ASP.NET Core 8 Web API + Controllers + Swagger**.
+
+---
+
