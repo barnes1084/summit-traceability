@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16
+    container_name: summit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - summit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - summit-net
+
+  flyway:
+    image: flyway/flyway:10
+    container_name: summit-flyway
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      -connectRetries=60
+      -baselineOnMigrate=true
+      migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      FLYWAY_USER: ${POSTGRES_USER}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+      FLYWAY_SCHEMAS: public
+    volumes:
+      - ../db/migrations:/flyway/sql:ro
+    networks:
+      - summit-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: summit-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - summit-net
+
+volumes:
+  summit_pgdata:
+
+networks:
+  summit-net:
+    name: summit-net
