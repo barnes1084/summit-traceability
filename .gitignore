@@ -30,3 +30,4 @@ data/
 # VS Code
 .vscode/
 /backend/Summit.Traceability/.vs
+/backend/Summit.Traceability/Summit.Trace.Api/publish

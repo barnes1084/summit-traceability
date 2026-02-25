@@ -1,11 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Summit.Trace.Api.Data;
-using System;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers + Swagger
-builder.Services.AddControllers();
+builder.Services
+  .AddControllers()
+  .AddJsonOptions(o =>
+  {
+      o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+      o.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+  });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

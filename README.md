@@ -20,3 +20,13 @@ Hybrid local + cloud traceability and inventory system for small-to-mid manufact
 ## Status
 
 MVP Development
+
+## To start this up:
+
+```
+cd backend\Summit.Traceability\Summit.Trace.Api
+dotnet publish -c Release -o .\publish
+
+cd ..\..\..\docker
+docker compose up -d --build
+```

@@ -39,6 +39,37 @@ services:
     networks:
       - summit-net
 
+  api:
+    build:
+      context: ../backend/Summit.Traceability/Summit.Trace.Api
+      dockerfile: Dockerfile.runtime
+    container_name: summit-api
+    restart: unless-stopped
+    ports:
+      - "7105:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Db: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      flyway:
+        condition: service_started
+    networks:
+      - summit-net
+
+  ui:
+    build:
+      context: ../frontend/summit-trace-ui
+    container_name: summit-ui
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    depends_on:
+      - api
+    networks:
+      - summit-net
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: summit-pgadmin

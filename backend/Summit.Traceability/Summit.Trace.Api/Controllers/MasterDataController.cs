@@ -14,17 +14,17 @@ public class MasterDataController : ControllerBase
 
     [HttpGet("sites")]
     public async Task<IActionResult> Sites()
-        => Ok(await _db.Sites.OrderBy(s => s.site_code).ToListAsync());
+        => Ok(await _db.Sites.OrderBy(s => s.SiteCode).ToListAsync());
 
     [HttpGet("locations")]
     public async Task<IActionResult> Locations([FromQuery] string siteCode)
     {
-        var siteId = await _db.Sites.Where(s => s.site_code == siteCode).Select(s => s.site_id).FirstOrDefaultAsync();
+        var siteId = await _db.Sites.Where(s => s.SiteCode == siteCode).Select(s => s.SiteId).FirstOrDefaultAsync();
         if (siteId == Guid.Empty) return NotFound(new { message = $"Unknown siteCode '{siteCode}'" });
 
         var rows = await _db.Locations
-            .Where(l => l.site_id == siteId && l.is_active)
-            .OrderBy(l => l.location_code)
+            .Where(l => l.SiteId == siteId && l.IsActive)
+            .OrderBy(l => l.LocationCode)
             .ToListAsync();
 
         return Ok(rows);
@@ -33,12 +33,12 @@ public class MasterDataController : ControllerBase
     [HttpGet("items")]
     public async Task<IActionResult> Items([FromQuery] string siteCode)
     {
-        var siteId = await _db.Sites.Where(s => s.site_code == siteCode).Select(s => s.site_id).FirstOrDefaultAsync();
+        var siteId = await _db.Sites.Where(s => s.SiteCode == siteCode).Select(s => s.SiteId).FirstOrDefaultAsync();
         if (siteId == Guid.Empty) return NotFound(new { message = $"Unknown siteCode '{siteCode}'" });
 
         var rows = await _db.Items
-            .Where(i => i.site_id == siteId && i.is_active)
-            .OrderBy(i => i.item_code)
+            .Where(i => i.SiteId == siteId && i.IsActive)
+            .OrderBy(i => i.ItemCode)
             .ToListAsync();
 
         return Ok(rows);
@@ -47,26 +47,26 @@ public class MasterDataController : ControllerBase
     [HttpGet("workorders")]
     public async Task<IActionResult> WorkOrders([FromQuery] string siteCode, [FromQuery] string? status = "open")
     {
-        var siteId = await _db.Sites.Where(s => s.site_code == siteCode).Select(s => s.site_id).FirstOrDefaultAsync();
+        var siteId = await _db.Sites.Where(s => s.SiteCode == siteCode).Select(s => s.SiteId).FirstOrDefaultAsync();
         if (siteId == Guid.Empty) return NotFound(new { message = $"Unknown siteCode '{siteCode}'" });
 
-        var q = _db.WorkOrders.Where(w => w.site_id == siteId);
+        var q = _db.WorkOrders.Where(w => w.SiteId == siteId);
         if (!string.IsNullOrWhiteSpace(status))
-            q = q.Where(w => w.status == status);
+            q = q.Where(w => w.Status == status);
 
-        return Ok(await q.OrderByDescending(w => w.created_at).Take(200).ToListAsync());
+        return Ok(await q.OrderByDescending(w => w.CreatedAt).Take(200).ToListAsync());
     }
 
     [HttpGet("lots")]
     public async Task<IActionResult> Lots([FromQuery] string siteCode, [FromQuery] string? status = "active")
     {
-        var siteId = await _db.Sites.Where(s => s.site_code == siteCode).Select(s => s.site_id).FirstOrDefaultAsync();
+        var siteId = await _db.Sites.Where(s => s.SiteCode == siteCode).Select(s => s.SiteId).FirstOrDefaultAsync();
         if (siteId == Guid.Empty) return NotFound(new { message = $"Unknown siteCode '{siteCode}'" });
 
-        var q = _db.Lots.Where(l => l.lot_code == siteId);
+        var q = _db.Lots.Where(l => l.SiteId == siteId);
         if (!string.IsNullOrWhiteSpace(status))
-            q = q.Where(l => l.status == status);
+            q = q.Where(l => l.Status == status);
 
-        return Ok(await q.OrderByDescending(l => l.created_at).Take(200).ToListAsync());
+        return Ok(await q.OrderByDescending(l => l.CreatedAt).Take(200).ToListAsync());
     }
 }

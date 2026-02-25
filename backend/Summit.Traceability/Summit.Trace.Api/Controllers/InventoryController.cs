@@ -16,10 +16,10 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> OnHand([FromQuery] string siteCode)
     {
         var rows = await _db.InventoryOnHand
-            .Where(x => x.site_code == siteCode)
-            .OrderBy(x => x.location_code)
-            .ThenBy(x => x.item_code)
-            .ThenBy(x => x.lot_code)
+            .Where(x => x.SiteCode == siteCode)
+            .OrderBy(x => x.LocationCode)
+            .ThenBy(x => x.ItemCode)
+            .ThenBy(x => x.LotCode)
             .ToListAsync();
 
         return Ok(rows);

@@ -34,24 +34,24 @@ public class ScanEventsController : ControllerBase
 
         var e = new ScanEvent
         {
-            event_id = Guid.NewGuid(),
-            ts = DateTimeOffset.UtcNow,
-            data = req.Data.Trim(),
-            symbology = req.Symbology,
-            source_mode = string.IsNullOrWhiteSpace(req.SourceMode) ? "unknown" : req.SourceMode,
-            vendor = req.Vendor,
-            device_id = req.DeviceId,
-            site_id = req.SiteId,
-            station_id = req.StationId,
-            user_id = req.UserId,
-            screen = req.Screen,
-            expected_type = req.ExpectedType,
-            raw_json = req.RawJson
+            EventId = Guid.NewGuid(),
+            Ts = DateTimeOffset.UtcNow,
+            Data = req.Data.Trim(),
+            Symbology = req.Symbology,
+            SourceMode = string.IsNullOrWhiteSpace(req.SourceMode) ? "unknown" : req.SourceMode,
+            Vendor = req.Vendor,
+            DeviceId = req.DeviceId,
+            SiteId = req.SiteId,
+            StationId = req.StationId,
+            UserId = req.UserId,
+            Screen = req.Screen,
+            ExpectedType = req.ExpectedType,
+            RawJson = req.RawJson
         };
 
         _db.ScanEvents.Add(e);
         await _db.SaveChangesAsync();
 
-        return Created($"/api/scan-events/{e.event_id}", new { e.event_id, e.ts });
+        return Created($"/api/scan-events/{e.EventId}", new { e.EventId, e.Ts });
     }
 }
